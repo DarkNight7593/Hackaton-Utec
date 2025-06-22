@@ -1,4 +1,3 @@
-# render_json.py
 import json
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -21,7 +20,9 @@ def walk_json(g, parent, obj):
 
 def lambda_handler(event, context):
     try:
-        codigo = event.get('codigo')
+        body = event['body']
+        codigo = body['codigo']
+
         if not codigo:
             return {'statusCode': 400, 'body': 'Código no proporcionado'}
 
@@ -37,6 +38,17 @@ def lambda_handler(event, context):
         plt.savefig(buffer, format="png", bbox_inches='tight')
         plt.close()
         buffer.seek(0)
-        return {'statusCode': 200, 'body': {'image': buffer.read().decode('latin1')}}
+
+        return {
+            'statusCode': 200,
+            'body': {
+                'image': buffer.read().decode('latin1')
+            }
+        }
+
     except Exception as e:
-        return {'statusCode': 500, 'body': str(e)}
+        return {
+            'statusCode': 500,
+            'body': str(e)
+        }
+

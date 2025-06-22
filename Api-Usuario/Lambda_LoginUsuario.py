@@ -9,14 +9,18 @@ def hash_password(password):
 
 def lambda_handler(event, context):
     try:
-        tenant_id = event.get('tenant_id')
-        dni = event.get('dni')
-        password = event.get('password')
+        # 🔥 Suponemos que ya viene como diccionario anidado (ej: desde otra Lambda)
+        body = event['body']
+        tenant_id = body['tenant_id']
+        dni = body['dni']
+        password = body['password']
 
         if not all([tenant_id, dni, password]):
             return {
                 'statusCode': 400,
-                'body': {'error': 'Missing tenant_id, dni, or password'}
+                'body': {
+                    'error': 'Missing tenant_id, dni, or password'
+                }
             }
 
         hashed_password = hash_password(password)
@@ -25,8 +29,8 @@ def lambda_handler(event, context):
         nombre_tabla_tokens = os.environ["TABLE_TOKEN"]
 
         dynamodb = boto3.resource('dynamodb')
-
         t_usuarios = dynamodb.Table(nombre_tabla_usuarios)
+
         response = t_usuarios.get_item(
             Key={
                 'tenant_id': tenant_id,
@@ -65,7 +69,8 @@ def lambda_handler(event, context):
             'body': {
                 'message': 'Login exitoso',
                 'token': token,
-                'expires_at': expiracion.strftime('%Y-%m-%d %H:%M:%S')
+                'expires_at': expiracion.strftime('%Y-%m-%d %H:%M:%S'),
+                'tenant_id': tenant_id
             }
         }
 
@@ -75,4 +80,5 @@ def lambda_handler(event, context):
             'statusCode': 500,
             'body': {'error': str(e)}
         }
+
 

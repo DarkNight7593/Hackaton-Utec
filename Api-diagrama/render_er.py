@@ -4,7 +4,8 @@ from eralchemy import render_er
 
 def lambda_handler(event, context):
     try:
-        codigo = event.get('codigo')
+        body = event['body']
+        codigo = body['codigo']
         if not codigo:
             return {'statusCode': 400, 'body': 'Código no proporcionado'}
 

@@ -4,8 +4,10 @@ import os
 
 def lambda_handler(event, context):
     try:
-        token = event.get('token')
-        tenant_id = event.get('tenant_id')
+        # ✅ Extraer parámetros del cuerpo directamente
+        body = event['body']
+        token = body['token']
+        tenant_id = body['tenant_id']
 
         if not token or not tenant_id:
             return {
@@ -56,3 +58,4 @@ def lambda_handler(event, context):
             'statusCode': 500,
             'body': {'error': str(e)}
         }
+

@@ -4,6 +4,7 @@ from datetime import datetime
 
 s3 = boto3.client('s3')
 lambda_client = boto3.client('lambda')
+
 BUCKET = os.environ["BUCKET_DIAGRAMAS"]
 FUNCION_VALIDAR = os.environ["FUNCION_VALIDAR"]
 FUNCION_AWS = os.environ["FUNCION_DIAGRAMA_AWS"]
@@ -16,19 +17,22 @@ def lambda_handler(event, context):
         if not token:
             return {'statusCode': 403, 'body': 'Token no proporcionado'}
 
+        # Validar token llamando a función Lambda externa
         validar = lambda_client.invoke(
             FunctionName=FUNCION_VALIDAR,
             InvocationType='RequestResponse',
-            Payload=json.dumps({ 'token': token })
+            Payload=json.dumps({ 'body': { 'token': token } })
         )
         payload = json.loads(validar['Payload'].read())
         if payload['statusCode'] != 200:
             return {'statusCode': 403, 'body': 'Token inválido'}
 
         tenant_id = payload['body']['tenant_id']
-        data = json.loads(event['body'])
-        codigo = data.get('codigo')
-        tipo = data.get('tipo')
+
+        # Leer cuerpo como diccionario directamente
+        body = event['body']
+        codigo = body['codigo']
+        tipo = body['tipo']
 
         if not codigo or not tipo:
             return {'statusCode': 400, 'body': 'Faltan campos obligatorios'}
@@ -46,10 +50,11 @@ def lambda_handler(event, context):
         if not funcion_objetivo:
             return {'statusCode': 400, 'body': 'Tipo de diagrama no válido'}
 
+        # Invocar Lambda de render
         render_result = lambda_client.invoke(
             FunctionName=funcion_objetivo,
             InvocationType='RequestResponse',
-            Payload=json.dumps({ 'codigo': codigo })
+            Payload=json.dumps({ 'body': { 'codigo': codigo } })
         )
         resultado = json.loads(render_result['Payload'].read())
 
@@ -58,6 +63,7 @@ def lambda_handler(event, context):
 
         image_bytes = bytes(resultado['body']['image'], encoding='latin1')
 
+        # Subir archivo fuente y imagen
         s3.put_object(Bucket=BUCKET, Key=nombre_src, Body=codigo.encode('utf-8'), ContentType='text/plain')
         s3.put_object(Bucket=BUCKET, Key=nombre_img, Body=image_bytes, ContentType='image/png', ACL='public-read')
 
@@ -72,4 +78,5 @@ def lambda_handler(event, context):
             })
         }
     except Exception as e:
+        print("Error:", str(e))
         return {'statusCode': 500, 'body': str(e)}
