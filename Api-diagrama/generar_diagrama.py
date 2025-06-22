@@ -19,7 +19,7 @@ def lambda_handler(event, context):
         
         payload_string = '{ "token": "' + token +  '" }'
         # Validar token llamando a función Lambda externa
-        validar = lambda_client.invoke(FunctionName="ValidarTokenAcceso",
+        validar = lambda_client.invoke(FunctionName=FUNCION_VALIDAR ,
                                            InvocationType='RequestResponse',
                                            Payload = payload_string)
         payload = json.loads(validar['Payload'].read())
