@@ -5,12 +5,13 @@ import os
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
-def lambda_handler(event, context):
+def lambda_handler(body, context):
     try:
-        tenant_id = event.get('tenant_id')
-        dni = event.get('dni')
-        full_name = event.get("full_name")
-        password = event.get('password')
+        body = body['body']
+        tenant_id = body['tenant_id']
+        dni = body['dni']
+        full_name = body['full_name']
+        password = body['password']
         nombre_tabla = os.environ["TABLE_USER"]
 
         if tenant_id and dni and full_name and password:
