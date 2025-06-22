@@ -6,7 +6,7 @@ provider:
   memorySize: 1024
   timeout: 30
   iam:
-    role: arn:aws:iam::674438223832:role/LabRole
+    role: arn:aws:iam::752087942362:role/LabRole
   environment:
     BUCKET_DIAGRAMAS: ${sls:stage}-bucket-diagramas
     FUNCION_VALIDAR: api-usuario-${sls:stage}-validar
