@@ -13,11 +13,13 @@ FUNCION_JSON = os.environ["FUNCION_DIAGRAMA_JSON"]
 
 def lambda_handler(event, context):
     try:
+        body = event['body']
+        tenant_id=body['tenant_id']
         token = event['headers'].get('Authorization')
         if not token:
             return {'statusCode': 403, 'body': 'Token no proporcionado'}
         
-        payload_string = '{ "token": "' + token +  '" }'
+        payload_string = '{ "token": "' + token +  '", "tenant_id":"'+tenant_id+'" }'
         # Validar token llamando a función Lambda externa
         validar = lambda_client.invoke(FunctionName=FUNCION_VALIDAR ,
                                            InvocationType='RequestResponse',
@@ -29,7 +31,6 @@ def lambda_handler(event, context):
         tenant_id = payload['body']['tenant_id']
 
         # Leer cuerpo como diccionario directamente
-        body = event['body']
         codigo = body['codigo']
         tipo = body['tipo']
 
