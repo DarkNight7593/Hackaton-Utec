@@ -1,5 +1,6 @@
 org: juanrodo
 service: api-generador-diagramas
+
 provider:
   name: aws
   runtime: python3.12
@@ -10,13 +11,14 @@ provider:
   environment:
     BUCKET_DIAGRAMAS: ${sls:stage}-bucket-diagramas
     FUNCION_VALIDAR: api-usuario-${sls:stage}-validar
-    FUNCION_DIAGRAMA_AWS: pi-generador-diagramas-${sls:stage}-renderaws
+    FUNCION_DIAGRAMA_AWS: api-generador-diagramas-${sls:stage}-renderaws
     FUNCION_DIAGRAMA_ER: api-generador-diagramas-${sls:stage}-renderer
     FUNCION_DIAGRAMA_JSON: api-generador-diagramas-${sls:stage}-renderjson
 
 functions:
   generar_diagrama:
     handler: generar_diagrama.lambda_handler
+    timeout: 29
     package:
       include:
         - generar_diagrama.py
@@ -28,6 +30,7 @@ functions:
 
   renderaws:
     handler: render_aws.lambda_handler
+    timeout: 29
     package:
       include:
         - requirements/**
@@ -39,6 +42,7 @@ functions:
 
   renderer:
     handler: render_er.lambda_handler
+    timeout: 29
     package:
       include:
         - requirements/**
@@ -50,6 +54,7 @@ functions:
 
   renderjson:
     handler: render_json.lambda_handler
+    timeout: 29
     package:
       include:
         - requirements/**
@@ -65,10 +70,22 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${sls:stage}-bucket-diagramas
-        AccessControl: PublicRead
         CorsConfiguration:
           CorsRules:
             - AllowedOrigins: ["*"]
               AllowedMethods: ["GET", "PUT"]
               AllowedHeaders: ["*"]
               MaxAge: 3000
+
+    BucketDiagramasPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref BucketDiagramas
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Sid: PublicReadGetObject
+              Effect: Allow
+              Principal: "*"
+              Action: s3:GetObject
+              Resource: !Sub arn:aws:s3:::${sls:stage}-bucket-diagramas/*
