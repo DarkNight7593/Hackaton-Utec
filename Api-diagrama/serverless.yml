@@ -76,16 +76,3 @@ resources:
               AllowedMethods: ["GET", "PUT"]
               AllowedHeaders: ["*"]
               MaxAge: 3000
-
-    BucketDiagramasPolicy:
-      Type: AWS::S3::BucketPolicy
-      Properties:
-        Bucket: !Ref BucketDiagramas
-        PolicyDocument:
-          Version: "2012-10-17"
-          Statement:
-            - Sid: PublicReadGetObject
-              Effect: Allow
-              Principal: "*"
-              Action: s3:GetObject
-              Resource: !Sub arn:aws:s3:::${sls:stage}-bucket-diagramas/*
