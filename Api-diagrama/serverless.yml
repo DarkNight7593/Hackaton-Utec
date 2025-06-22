@@ -1,0 +1,74 @@
+org: juanrodo
+service: api-generador-diagramas
+provider:
+  name: aws
+  runtime: python3.12
+  memorySize: 1024
+  timeout: 30
+  iam:
+    role: arn:aws:iam::674438223832:role/LabRole
+  environment:
+    BUCKET_DIAGRAMAS: ${sls:stage}-bucket-diagramas
+    FUNCION_VALIDAR: api-usuario-${sls:stage}-validar
+    FUNCION_DIAGRAMA_AWS: pi-generador-diagramas-${sls:stage}-renderaws
+    FUNCION_DIAGRAMA_ER: api-generador-diagramas-${sls:stage}-renderer
+    FUNCION_DIAGRAMA_JSON: api-generador-diagramas-${sls:stage}-renderjson
+
+functions:
+  generar_diagrama:
+    handler: generar_diagrama.lambda_handler
+    package:
+      include:
+        - generar_diagrama.py
+    events:
+      - http:
+          path: /diagrama/generar
+          method: post
+          cors: true
+
+  renderaws:
+    handler: render_aws.lambda_handler
+    package:
+      include:
+        - requirements/**
+    events:
+      - http:
+          path: /diagrama/render/aws
+          method: post
+          cors: true
+
+  renderer:
+    handler: render_er.lambda_handler
+    package:
+      include:
+        - requirements/**
+    events:
+      - http:
+          path: /diagrama/render/er
+          method: post
+          cors: true
+
+  renderjson:
+    handler: render_json.lambda_handler
+    package:
+      include:
+        - requirements/**
+    events:
+      - http:
+          path: /diagrama/render/json
+          method: post
+          cors: true
+
+resources:
+  Resources:
+    BucketDiagramas:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${sls:stage}-bucket-diagramas
+        AccessControl: PublicRead
+        CorsConfiguration:
+          CorsRules:
+            - AllowedOrigins: ["*"]
+              AllowedMethods: ["GET", "PUT"]
+              AllowedHeaders: ["*"]
+              MaxAge: 3000
