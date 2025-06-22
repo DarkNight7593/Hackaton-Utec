@@ -16,13 +16,12 @@ def lambda_handler(event, context):
         token = event['headers'].get('Authorization')
         if not token:
             return {'statusCode': 403, 'body': 'Token no proporcionado'}
-
+        
+        payload_string = '{ "token": "' + token +  '" }'
         # Validar token llamando a función Lambda externa
-        validar = lambda_client.invoke(
-            FunctionName=FUNCION_VALIDAR,
-            InvocationType='RequestResponse',
-            Payload=json.dumps({ 'body': { 'token': token } })
-        )
+        validar = lambda_client.invoke(FunctionName="ValidarTokenAcceso",
+                                           InvocationType='RequestResponse',
+                                           Payload = payload_string)
         payload = json.loads(validar['Payload'].read())
         if payload['statusCode'] != 200:
             return {'statusCode': 403, 'body': 'Token inválido'}
